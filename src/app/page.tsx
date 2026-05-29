@@ -1,36 +1,24 @@
-import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
+import { HeroBanner, SectionTitle, ServiceSection } from "@/components/HomeSections";
 
 export const revalidate = 0;
 
 export default async function Home() {
-  const { data: products, error } = await supabase.from('products').select('*');
+  const { data: products } = await supabase.from('products').select('*');
   return (
     <div className="container">
-      <div className="hero-banner">
-        <div className="hero-content">
-          <h1>Tibbiyot texnikalarini qulay narxlarda xarid qiling</h1>
-          <p>Barcha turdagi tibbiy jihozlar va ularga sifatli servis xizmati.</p>
-          <button className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '16px' }}>
-            Katalogni ko'rish
-          </button>
-        </div>
-        <div style={{ width: '300px', height: '200px', position: 'relative' }}>
-          {/* We would typically put a hero graphic here */}
-        </div>
-      </div>
+      <HeroBanner />
 
-      <h2 className="section-title">Ommabop tovarlar</h2>
-      
+      <SectionTitle tkey="popular_products" />
+
       <div className="product-grid">
         {products?.map((product) => (
           <Link href={`/product/${product.id}`} key={product.id} className="product-card">
             <div className="product-image-container">
-              {/* Fallback styling in case image fails to load during dev */}
               <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                 <Image 
                   src={product.image_url || '/placeholder.png'} 
@@ -56,20 +44,8 @@ export default async function Home() {
         ))}
       </div>
       
-      <h2 className="section-title">Servis xizmatlari</h2>
-      <div style={{ 
-        padding: '32px', 
-        backgroundColor: '#fff', 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px solid var(--border-color)',
-        marginBottom: '60px'
-      }}>
-        <h3 style={{ marginBottom: '16px' }}>Tibbiyot uskunangiz buzildimi?</h3>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-          Bizning malakali muhandislarimiz barcha turdagi meditsina texnikalarini ta'mirlaydi va xizmat ko'rsatadi.
-        </p>
-        <button className="btn btn-primary">Xizmatga buyurtma berish</button>
-      </div>
+      <SectionTitle tkey="service_section" />
+      <ServiceSection />
     </div>
   );
 }

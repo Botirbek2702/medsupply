@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronRight, Sun, Moon, Globe } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useLanguage } from "@/context/LanguageContext";
+import { Language } from "@/lib/translations";
 import { supabase } from "@/lib/supabase";
 
 const categories = [
@@ -19,13 +21,17 @@ const categories = [
 
 export default function Header() {
   const router = useRouter();
+  const { language, setLanguage, t } = useLanguage();
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [profileUrl, setProfileUrl] = useState("/auth");
   const [searchTerm, setSearchTerm] = useState("");
+  const [langOpen, setLangOpen] = useState(false);
   const totalItems = useCartStore(state => state.getTotalItems());
+
+  const langLabels: Record<Language, string> = { uz: "O'z", ru: "Ру", en: "En" };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,14 +98,14 @@ export default function Header() {
             onClick={() => setIsCatalogOpen(!isCatalogOpen)}
           >
             {isCatalogOpen ? <X size={18} /> : <Menu size={18} />}
-            <span>Katalog</span>
+            <span>{t("catalog")}</span>
           </button>
 
           <form className="search-bar" onSubmit={handleSearch}>
             <input 
               type="text" 
               className="search-input" 
-              placeholder="Mahsulotlarni izlash..." 
+              placeholder={t("search_placeholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -109,21 +115,80 @@ export default function Header() {
           </form>
 
           <div className="header-actions">
+            {/* Language Switcher */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="action-item"
+                style={{ backgroundColor: "transparent", border: "none" }}
+              >
+                <Globe size={24} />
+                <span>{langLabels[language]}</span>
+              </button>
+              {langOpen && (
+                <>
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: 200 }}
+                    onClick={() => setLangOpen(false)}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      right: 0,
+                      backgroundColor: "var(--card-bg)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "var(--radius-md)",
+                      boxShadow: "var(--shadow-md)",
+                      zIndex: 201,
+                      overflow: "hidden",
+                      minWidth: "140px",
+                    }}
+                  >
+                    {([
+                      { code: "uz", label: "O'zbekcha" },
+                      { code: "ru", label: "Русский" },
+                      { code: "en", label: "English" },
+                    ] as { code: Language; label: string }[]).map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => { setLanguage(l.code); setLangOpen(false); }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "10px 16px",
+                          background: language === l.code ? "var(--primary-light)" : "transparent",
+                          color: language === l.code ? "var(--primary)" : "var(--text-main)",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: language === l.code ? 600 : 400,
+                        }}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             <button onClick={toggleDarkMode} className="action-item" style={{ backgroundColor: 'transparent', border: 'none' }}>
               {isDark ? <Sun size={24} /> : <Moon size={24} />}
-              <span>{isDark ? 'Yorug\'' : 'Tungi'}</span>
+              <span>{isDark ? t("light_mode") : t("dark_mode")}</span>
             </button>
             <Link href={profileUrl} className="action-item">
               <User size={24} />
-              <span>Kabinet</span>
+              <span>{t("account")}</span>
             </Link>
             <Link href="/favorites" className="action-item">
               <Heart size={24} />
-              <span>Saralangan</span>
+              <span>{t("favorites")}</span>
             </Link>
             <Link href="/cart" className="action-item" style={{ position: 'relative' }}>
               <ShoppingCart size={24} />
-              <span>Savat</span>
+              <span>{t("cart")}</span>
               {mounted && totalItems > 0 && (
                 <span style={{ position: 'absolute', top: -5, right: 10, background: 'var(--danger)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
                   {totalItems}
@@ -134,12 +199,12 @@ export default function Header() {
         </div>
         
         <nav className="header-nav">
-          <a href="#">Aksiyalar</a>
-          <a href="#">Elektronika</a>
-          <a href="#">Xirurgiya</a>
-          <a href="#">Stomatologiya</a>
-          <a href="#">Laboratoriya</a>
-          <a href="#">Servis xizmatlari</a>
+          <a href="#">{t("promotions")}</a>
+          <a href="#">{t("electronics")}</a>
+          <a href="#">{t("surgery")}</a>
+          <a href="#">{t("dentistry")}</a>
+          <a href="#">{t("laboratory")}</a>
+          <a href="#">{t("services")}</a>
         </nav>
       </div>
 
