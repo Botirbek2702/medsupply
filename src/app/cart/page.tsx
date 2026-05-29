@@ -1,29 +1,34 @@
+"use client";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, Minus, Plus } from "lucide-react";
-
-const cartItems = [
-  {
-    id: 1,
-    title: "Philips Achieva 1.5T MRT apparati, yuqori sifatli tasvirlash",
-    price: 450000000,
-    priceStr: "450 000 000 so'm",
-    image: "/images/mri_machine.png",
-    quantity: 1,
-  },
-  {
-    id: 3,
-    title: "Jarrohlik uskunalari to'plami, zanglamas po'latdan",
-    price: 3200000,
-    priceStr: "3 200 000 so'm",
-    image: "/images/surgical_tools.png",
-    quantity: 2,
-  }
-];
+import { Trash2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
 
 export default function CartPage() {
-  const totalPrice = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const totalFormatted = new Intl.NumberFormat('uz-UZ').format(totalPrice) + " so'm";
+  const [mounted, setMounted] = useState(false);
+  const { items, removeFromCart, updateQuantity, getTotalPrice } = useCartStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const totalFormatted = new Intl.NumberFormat('uz-UZ').format(getTotalPrice()) + " so'm";
+
+  if (items.length === 0) {
+    return (
+      <div className="container" style={{ padding: "64px 16px", textAlign: "center", minHeight: "50vh" }}>
+        <ShoppingCart size={64} style={{ margin: "0 auto 16px", opacity: 0.2 }} />
+        <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>Savatingiz bo'sh</h2>
+        <p style={{ color: "var(--text-muted)", marginBottom: "24px" }}>Hali hech qanday tibbiyot uskunasi tanlamadingiz.</p>
+        <Link href="/">
+          <button className="btn btn-primary" style={{ padding: "12px 24px" }}>Bosh sahifaga qaytish</button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container" style={{ padding: "32px 16px" }}>
@@ -33,32 +38,32 @@ export default function CartPage() {
         
         {/* Cart Items */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
-          {cartItems.map((item) => (
-            <div key={item.id} style={{ display: "flex", padding: "24px", backgroundColor: "var(--card-bg)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", gap: "24px", alignItems: "center" }}>
+          {items.map((item) => (
+            <div key={item.id} style={{ display: "flex", padding: "24px", backgroundColor: "var(--card-bg)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
               
               <div style={{ width: "100px", height: "100px", position: "relative", backgroundColor: "var(--bg-color)", borderRadius: "var(--radius-md)" }}>
-                <Image src={item.image} alt={item.title} fill style={{ objectFit: "contain", padding: "8px" }} />
+                <Image src={item.image_url} alt={item.title} fill style={{ objectFit: "contain", padding: "8px" }} />
               </div>
               
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: "200px" }}>
                 <Link href={`/product/${item.id}`} style={{ fontWeight: 500, fontSize: "16px", color: "var(--text-main)", marginBottom: "8px", display: "inline-block" }}>
                   {item.title}
                 </Link>
                 <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>Yetkazib berish va o'rnatish bepul</div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden" }}>
-                  <button style={{ padding: "8px 12px", backgroundColor: "var(--card-bg)", borderRight: "1px solid var(--border-color)", cursor: "pointer" }}><Minus size={16} /></button>
+                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ padding: "8px 12px", backgroundColor: "var(--card-bg)", borderRight: "1px solid var(--border-color)", cursor: "pointer" }}><Minus size={16} /></button>
                   <span style={{ padding: "0 16px", fontWeight: 500 }}>{item.quantity}</span>
-                  <button style={{ padding: "8px 12px", backgroundColor: "var(--card-bg)", borderLeft: "1px solid var(--border-color)", cursor: "pointer" }}><Plus size={16} /></button>
+                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ padding: "8px 12px", backgroundColor: "var(--card-bg)", borderLeft: "1px solid var(--border-color)", cursor: "pointer" }}><Plus size={16} /></button>
                 </div>
                 
                 <div style={{ fontWeight: 700, fontSize: "18px", width: "150px", textAlign: "right" }}>
-                  {item.priceStr}
+                  {new Intl.NumberFormat('uz-UZ').format(item.price * item.quantity)} so'm
                 </div>
 
-                <button style={{ padding: "8px", color: "var(--danger)", backgroundColor: "transparent" }}>
+                <button onClick={() => removeFromCart(item.id)} style={{ padding: "8px", color: "var(--danger)", backgroundColor: "transparent", cursor: "pointer" }}>
                   <Trash2 size={20} />
                 </button>
               </div>
@@ -72,7 +77,7 @@ export default function CartPage() {
           <h2 style={{ fontSize: "20px", marginBottom: "24px" }}>Buyurtmangiz</h2>
           
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px", color: "var(--text-muted)" }}>
-            <span>Mahsulotlar soni ({cartItems.length}):</span>
+            <span>Mahsulotlar soni ({items.reduce((acc, item) => acc + item.quantity, 0)}):</span>
             <span>{totalFormatted}</span>
           </div>
           

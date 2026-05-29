@@ -1,13 +1,20 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import Image from "next/image";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export default function FavoritesPage() {
-  const favorites = [
-    { id: 1, title: "Philips Achieva 1.5T MRT apparati - Premium diagnostika", price: "450 000 000 so'm", rating: 4.9, image: "/mri_machine_1779796015053.png" },
-    { id: 2, title: "Mindray DC-70 Ultratovush (UZI) apparati", price: "120 000 000 so'm", rating: 4.8, image: "/media__1779796889813.png" },
-  ];
+  const [mounted, setMounted] = useState(false);
+  const { items, toggleFavorite } = useFavoritesStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="container" style={{ padding: "32px 16px", minHeight: "60vh" }}>
@@ -16,28 +23,33 @@ export default function FavoritesPage() {
         Saralangan mahsulotlar
       </h1>
 
-      {favorites.length > 0 ? (
+      {items.length > 0 ? (
         <div className="product-grid">
-          {favorites.map((product) => (
-            <Link href={`/product/${product.id}`} key={product.id}>
-              <div className="product-card" style={{ height: "100%" }}>
-                <div className="product-image-container">
-                  <Image src={product.image} alt={product.title} width={180} height={180} style={{ objectFit: "contain" }} />
-                  <button className="add-to-cart-btn" style={{ position: "absolute", top: "12px", right: "12px", backgroundColor: "transparent", color: "var(--danger)" }} onClick={(e) => e.preventDefault()}>
-                    <Heart size={20} fill="currentColor" />
-                  </button>
+          {items.map((product) => (
+            <Link href={`/product/${product.id}`} key={product.id} className="product-card">
+              <div className="product-image-container">
+                <Image src={product.image_url} alt={product.title} fill style={{ objectFit: "contain" }} />
+                <button 
+                  className="add-to-cart-btn" 
+                  style={{ position: "absolute", top: "12px", right: "12px", backgroundColor: "transparent", color: "var(--danger)", border: "none", cursor: "pointer" }} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleFavorite(product);
+                  }}
+                >
+                  <Heart size={20} fill="currentColor" />
+                </button>
+              </div>
+              <div className="product-info">
+                <h3 className="product-title">{product.title}</h3>
+                <div className="product-rating">
+                  <Star className="star" fill="var(--warning)" color="var(--warning)" size={14} />
+                  <span>{product.rating || 5.0}</span>
                 </div>
-                <div className="product-info">
-                  <h3 className="product-title">{product.title}</h3>
-                  <div className="product-rating">
-                    <Star className="star" fill="currentColor" />
-                    <span>{product.rating}</span>
-                  </div>
-                  <div className="product-footer">
-                    <div className="product-price">{product.price}</div>
-                    <button className="add-to-cart-btn" onClick={(e) => e.preventDefault()}>
-                      <ShoppingCart size={18} />
-                    </button>
+                <div className="product-footer">
+                  <div className="product-price">{new Intl.NumberFormat('uz-UZ').format(product.price)} so'm</div>
+                  <div onClick={(e) => e.preventDefault()}>
+                    <AddToCartButton product={product} />
                   </div>
                 </div>
               </div>
@@ -50,7 +62,7 @@ export default function FavoritesPage() {
           <h2>Saralangan mahsulotlar yo'q</h2>
           <p style={{ marginTop: "8px", marginBottom: "24px" }}>Sizga yoqqan mahsulotlardagi yurakcha belgisini bosing va ular shu yerda saqlanadi.</p>
           <Link href="/">
-            <button className="btn btn-primary" style={{ padding: "12px 24px" }}>Bosh sahifaga qaytish</button>
+            <button className="btn btn-primary" style={{ padding: "12px 24px" }}>Katalogga o'tish</button>
           </Link>
         </div>
       )}

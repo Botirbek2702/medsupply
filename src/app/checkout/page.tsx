@@ -1,4 +1,4 @@
-sb_publishable_oNCAI5RvTHVjaG4oWrMQ2Q_HPBloLftimport Link from "next/link";
+import Link from "next/link";
 import { ArrowLeft, CheckCircle, MapPin, CreditCard, Building2 } from "lucide-react";
 
 export default function CheckoutPage() {

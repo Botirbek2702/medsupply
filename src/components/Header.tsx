@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, ShoppingCart, Heart, User, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
+import { supabase } from "@/lib/supabase";
 
 const categories = [
   { id: 1, name: "Diagnostika uskunalari", sub: ["MRT va KT", "Rentgen apparatlari", "UZI (Ultratovush)", "Endoskopiya"] },
@@ -18,13 +20,39 @@ export default function Header() {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [profileUrl, setProfileUrl] = useState("/auth");
+  const totalItems = useCartStore(state => state.getTotalItems());
 
   useEffect(() => {
+    setMounted(true);
     // Check initial preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDark(true);
       document.documentElement.setAttribute('data-theme', 'dark');
     }
+
+    // Check user auth state
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin/add-product" : "/profile");
+      }
+    };
+    checkUser();
+
+    // Listen to changes (login/logout)
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin/add-product" : "/profile");
+      } else {
+        setProfileUrl("/auth");
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const toggleDarkMode = () => {
@@ -75,7 +103,7 @@ export default function Header() {
               {isDark ? <Sun size={24} /> : <Moon size={24} />}
               <span>{isDark ? 'Yorug\'' : 'Tungi'}</span>
             </button>
-            <Link href="/auth" className="action-item">
+            <Link href={profileUrl} className="action-item">
               <User size={24} />
               <span>Kabinet</span>
             </Link>
@@ -83,9 +111,14 @@ export default function Header() {
               <Heart size={24} />
               <span>Saralangan</span>
             </Link>
-            <Link href="/cart" className="action-item">
+            <Link href="/cart" className="action-item" style={{ position: 'relative' }}>
               <ShoppingCart size={24} />
               <span>Savat</span>
+              {mounted && totalItems > 0 && (
+                <span style={{ position: 'absolute', top: -5, right: 10, background: 'var(--danger)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
+                  {totalItems}
+                </span>
+              )}
             </Link>
           </div>
         </div>

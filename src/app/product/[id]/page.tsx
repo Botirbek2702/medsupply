@@ -1,27 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Heart, ShieldCheck, Truck, Clock, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import AddToCartButton from "@/components/AddToCartButton";
+import FavoriteButton from "@/components/FavoriteButton";
 
-// In a real app, this would fetch from a database based on the ID
-const product = {
-  id: 1,
-  title: "Philips Achieva 1.5T MRT apparati, yuqori sifatli tasvirlash",
-  price: "450 000 000 so'm",
-  oldPrice: "500 000 000 so'm",
-  rating: 4.8,
-  reviews: 12,
-  image: "/images/mri_machine.png",
-  description: "Philips Achieva 1.5T MRT apparati klinikangiz uchun aniq va ishonchli diagnostika vositasi. Bemorlarga qulaylik va yuqori sifatli tasvirni taqdim etadi. O'rnatish va o'rgatish bepul.",
-  specs: [
-    { name: "Magnit maydoni", value: "1.5 Tesla" },
-    { name: "Skanerlash tezligi", value: "Yuqori (SmartExam)" },
-    { name: "Bemor og'irligi", value: "250 kg gacha" },
-    { name: "Kafolat", value: "2 yil" },
-    { name: "Ishlab chiqaruvchi", value: "Philips (Niderlandiya)" }
-  ]
-};
+export const revalidate = 0;
 
-export default function ProductDetail({ params }: { params: { id: string } }) {
+export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const { data: product } = await supabase.from('products').select('*').eq('id', resolvedParams.id).single();
+  const { data: specs } = await supabase.from('product_specs').select('*').eq('product_id', resolvedParams.id);
+
+  if (!product) return <div className="container" style={{ padding: "32px 16px" }}>Mahsulot topilmadi... (ID: {resolvedParams.id})</div>;
   return (
     <div className="container" style={{ padding: "24px 16px" }}>
       {/* Breadcrumbs */}
@@ -40,7 +31,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
         <div className="product-gallery">
           <div className="main-image-container">
             <Image 
-              src={product.image} 
+              src={product.image_url || '/placeholder.png'} 
               alt={product.title} 
               fill
               style={{ objectFit: "contain" }}
@@ -50,7 +41,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
             {[1, 2, 3].map((item) => (
               <div key={item} className="thumbnail-item">
                 <Image 
-                  src={product.image} 
+                  src={product.image_url || '/placeholder.png'} 
                   alt="Thumbnail" 
                   fill
                   style={{ objectFit: "contain", padding: "4px" }}
@@ -65,14 +56,13 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
           <div className="rating-row">
             <span className="star">★</span>
             <span style={{ fontWeight: 500 }}>{product.rating}</span>
-            <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>({product.reviews} ta sharh)</span>
           </div>
           
           <h1 className="product-title-large">{product.title}</h1>
           
           <div className="price-section">
-            <div className="current-price">{product.price}</div>
-            {product.oldPrice && <div className="old-price">{product.oldPrice}</div>}
+            <div className="current-price">{Number(product.price).toLocaleString('uz-UZ')} so'm</div>
+            {product.old_price && <div className="old-price">{Number(product.old_price).toLocaleString('uz-UZ')} so'm</div>}
           </div>
 
           <div className="delivery-info">
@@ -93,21 +83,17 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
           </div>
 
           <div className="action-buttons">
-            <button className="btn btn-primary" style={{ flex: 1, padding: "16px", fontSize: "16px" }}>
-              Savatchaga qo'shish
-            </button>
-            <button className="btn btn-secondary" style={{ padding: "16px" }} aria-label="Saralanganlarga qo'shish">
-              <Heart size={24} />
-            </button>
+            <AddToCartButton product={product} fullWidth />
+            <FavoriteButton product={product} isLarge />
           </div>
 
           <div className="specs-section">
             <h3 style={{ marginBottom: "16px" }}>Xususiyatlari</h3>
             <ul className="specs-list">
-              {product.specs.map((spec, idx) => (
+              {specs?.map((spec: any, idx: number) => (
                 <li key={idx} className="spec-item">
-                  <span className="spec-name">{spec.name}</span>
-                  <span className="spec-value">{spec.value}</span>
+                  <span className="spec-name">{spec.spec_name}</span>
+                  <span className="spec-value">{spec.spec_value}</span>
                 </li>
               ))}
             </ul>

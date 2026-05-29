@@ -1,15 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Upload, Plus, Trash2, Save } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function AddProductPage() {
+  const [categories, setCategories] = useState<any[]>([]);
   const [specs, setSpecs] = useState([{ name: "", value: "" }]);
+  
+  // Form state
+  const [title, setTitle] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [oldPrice, setOldPrice] = useState("");
+  const [stock, setStock] = useState("10");
+  const [imageUrl, setImageUrl] = useState("/placeholder.png");
+  const [loading, setLoading] = useState(false);
 
-  const addSpec = () => {
-    setSpecs([...specs, { name: "", value: "" }]);
-  };
+  useEffect(() => {
+    // Fetch categories on load
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('*');
+      if (data) setCategories(data);
+    };
+    fetchCategories();
+  }, []);
+
+  const addSpec = () => setSpecs([...specs, { name: "", value: "" }]);
 
   const removeSpec = (index: number) => {
     const newSpecs = [...specs];
@@ -23,10 +42,67 @@ export default function AddProductPage() {
     setSpecs(newSpecs);
   };
 
+  const handleSave = async () => {
+    if (!title || !price || !categoryId) {
+      alert("Iltimos, mahsulot nomi, narxi va kategoriyasini kiriting!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 1. Insert Product
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .insert({
+          title,
+          description,
+          price: Number(price),
+          old_price: oldPrice ? Number(oldPrice) : null,
+          category_id: Number(categoryId),
+          stock: Number(stock),
+          image_url: imageUrl,
+          rating: 5.0
+        })
+        .select()
+        .single();
+
+      if (productError) throw productError;
+
+      // 2. Insert Specs (if any exist)
+      const validSpecs = specs.filter(s => s.name.trim() !== "" && s.value.trim() !== "");
+      if (validSpecs.length > 0 && productData) {
+        const specsToInsert = validSpecs.map(s => ({
+          product_id: productData.id,
+          spec_name: s.name,
+          spec_value: s.value
+        }));
+        
+        const { error: specsError } = await supabase.from('product_specs').insert(specsToInsert);
+        if (specsError) throw specsError;
+      }
+
+      alert("Mahsulot muvaffaqiyatli bazaga qo'shildi! 🎉");
+      
+      // Clear form
+      setTitle("");
+      setDescription("");
+      setPrice("");
+      setOldPrice("");
+      setCategoryId("");
+      setSpecs([{ name: "", value: "" }]);
+
+    } catch (error: any) {
+      console.error(error);
+      alert("Xatolik yuz berdi: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container" style={{ padding: "32px 16px", maxWidth: "1000px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
-        <Link href="/admin" style={{ padding: "8px", backgroundColor: "var(--card-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+        <Link href="/" style={{ padding: "8px", backgroundColor: "var(--card-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
           <ArrowLeft size={20} />
         </Link>
         <h1 style={{ color: "var(--text-main)", fontSize: "24px", margin: 0 }}>Yangi mahsulot qo'shish</h1>
@@ -42,34 +118,32 @@ export default function AddProductPage() {
             
             <div className="form-group">
               <label className="form-label">Mahsulot nomi</label>
-              <input type="text" className="form-input" placeholder="Masalan: Philips Achieva 1.5T MRT apparati" />
+              <input type="text" className="form-input" placeholder="Masalan: Philips Achieva 1.5T MRT apparati" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
 
             <div className="form-group" style={{ marginTop: "16px" }}>
               <label className="form-label">Kategoriya</label>
-              <select className="form-input">
+              <select className="form-input" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
                 <option value="">Kategoriyani tanlang</option>
-                <option value="diagnostika">Diagnostika uskunalari</option>
-                <option value="jarrohlik">Jarrohlik jihozlari</option>
-                <option value="reanimatsiya">Reanimatsiya va intensiv terapiya</option>
-                <option value="laboratoriya">Laboratoriya jihozlari</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
               </select>
             </div>
 
             <div className="form-group" style={{ marginTop: "16px" }}>
               <label className="form-label">Ta'rif (Description)</label>
-              <textarea className="form-input" rows={5} placeholder="Mahsulot haqida batafsil ma'lumot..."></textarea>
+              <textarea className="form-input" rows={5} placeholder="Mahsulot haqida batafsil ma'lumot..." value={description} onChange={e => setDescription(e.target.value)}></textarea>
             </div>
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
-            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Rasmlar</h2>
+            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Rasm (URL)</h2>
             
-            <div style={{ border: "2px dashed var(--border-color)", padding: "40px", textAlign: "center", borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: "var(--bg-color)" }}>
-              <Upload size={32} color="var(--text-muted)" style={{ margin: "0 auto 12px" }} />
-              <div style={{ fontWeight: 500, marginBottom: "4px" }}>Rasmlarni yuklash uchun bosing</div>
-              <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>yoki rasmlarni shu yerga tashlang (PNG, JPG)</div>
+            <div className="form-group">
+              <input type="text" className="form-input" placeholder="Rasm havolasi (masalan: /mri_machine.png yoki https://...)" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
             </div>
+            <div style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "8px" }}>* Hozircha rasmni to'g'ridan-to'g'ri URL manzil orqali kiritish mumkin.</div>
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
@@ -86,7 +160,7 @@ export default function AddProductPage() {
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Xususiyat nomi (masalan: Kafolat)" 
+                    placeholder="Masalan: Kafolat" 
                     value={spec.name}
                     onChange={(e) => handleSpecChange(index, "name", e.target.value)}
                     style={{ flex: 1 }}
@@ -94,7 +168,7 @@ export default function AddProductPage() {
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Qiymati (masalan: 2 yil)" 
+                    placeholder="Masalan: 2 yil" 
                     value={spec.value}
                     onChange={(e) => handleSpecChange(index, "value", e.target.value)}
                     style={{ flex: 2 }}
@@ -120,23 +194,23 @@ export default function AddProductPage() {
             
             <div className="form-group">
               <label className="form-label">Asosiy narxi (so'm)</label>
-              <input type="number" className="form-input" placeholder="0" />
+              <input type="number" className="form-input" placeholder="Masalan: 12000000" value={price} onChange={e => setPrice(e.target.value)} />
             </div>
 
             <div className="form-group" style={{ marginTop: "16px" }}>
               <label className="form-label">Eski narxi (chegirma uchun)</label>
-              <input type="number" className="form-input" placeholder="0" />
+              <input type="number" className="form-input" placeholder="Ixtiyoriy" value={oldPrice} onChange={e => setOldPrice(e.target.value)} />
             </div>
 
             <div className="form-group" style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--border-color)" }}>
               <label className="form-label">Ombordagi qoldiq (dona)</label>
-              <input type="number" className="form-input" placeholder="Masalan: 15" />
+              <input type="number" className="form-input" placeholder="Masalan: 15" value={stock} onChange={e => setStock(e.target.value)} />
             </div>
           </div>
 
-          <button className="btn btn-primary" style={{ width: "100%", padding: "16px", fontSize: "16px", display: "flex", gap: "8px", justifyContent: "center" }}>
+          <button className="btn btn-primary" onClick={handleSave} disabled={loading} style={{ width: "100%", padding: "16px", fontSize: "16px", display: "flex", gap: "8px", justifyContent: "center", opacity: loading ? 0.7 : 1 }}>
             <Save size={20} />
-            Saqlash va Nashr qilish
+            {loading ? "Saqlanmoqda..." : "Saqlash va Nashr qilish"}
           </button>
           
         </div>
