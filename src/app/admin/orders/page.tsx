@@ -20,6 +20,7 @@ interface Order {
   created_at: string;
   shipping_address: string;
   shipping_city: string;
+  user_id?: string;
 }
 
 interface OrderItem {
@@ -135,6 +136,24 @@ export default function AdminOrdersPage() {
         status: newStatus,
         notes: `Status o'zgartirildi: ${newStatus}`
       });
+
+      // Notify the customer
+      if (selectedOrder.user_id) {
+        const statusLabels: Record<string, string> = {
+          pending: "Kutilmoqda",
+          processing: "Jarayonda",
+          shipped: "Yetkazilmoqda",
+          delivered: "Yetkazildi",
+          cancelled: "Bekor qilindi",
+        };
+        await supabase.from('notifications').insert({
+          user_id: selectedOrder.user_id,
+          title: `Buyurtma holati yangilandi`,
+          message: `${selectedOrder.order_number} raqamli buyurtmangiz holati: "${statusLabels[newStatus] || newStatus}"`,
+          type: 'order',
+          link: '/profile?tab=orders',
+        });
+      }
 
       toast.success('Buyurtma holati yangilandi!');
       setShowOrderModal(false);
