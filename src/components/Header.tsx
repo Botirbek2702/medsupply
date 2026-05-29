@@ -42,10 +42,18 @@ export default function Header() {
 
   useEffect(() => {
     setMounted(true);
-    // Check initial preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setIsDark(true);
+    // Read saved theme (set by the inline script in layout). Fall back to OS preference.
+    let savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem('medsupply-theme');
+    } catch (e) {}
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkNow = savedTheme ? savedTheme === 'dark' : prefersDark;
+    setIsDark(isDarkNow);
+    if (isDarkNow) {
       document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
 
     // Check user auth state
@@ -79,6 +87,9 @@ export default function Header() {
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
+    try {
+      localStorage.setItem('medsupply-theme', newDark ? 'dark' : 'light');
+    } catch (e) {}
   };
 
   return (

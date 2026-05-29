@@ -37,8 +37,9 @@ export default function MobileBottomNav() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Hide bottom nav inside admin panel (admin has its own layout)
-  if (pathname?.startsWith("/admin")) return null;
+  // Hide bottom nav inside admin panel and on the auth page
+  // (centered forms there could otherwise be overlapped by the fixed nav)
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/auth")) return null;
 
   const items = [
     { href: "/", icon: Home, label: t("home"), match: (p: string) => p === "/" },
