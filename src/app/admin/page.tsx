@@ -11,27 +11,18 @@ import {
   Users, 
   ShoppingCart, 
   Settings,
-  LogOut,
-  TrendingUp,
-  DollarSign,
-  ShoppingBag
+  LogOut
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import AdminStats from "@/components/AdminStats";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalCategories: 0,
-    totalOrders: 0,
-    totalRevenue: 0
-  });
 
   useEffect(() => {
     checkAuth();
-    fetchStats();
   }, []);
 
   const checkAuth = async () => {
@@ -50,29 +41,6 @@ export default function AdminDashboard() {
 
     setUserEmail(session.user.email || "");
     setLoading(false);
-  };
-
-  const fetchStats = async () => {
-    try {
-      // Get products count
-      const { count: productsCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
-
-      // Get categories count
-      const { count: categoriesCount } = await supabase
-        .from('categories')
-        .select('*', { count: 'exact', head: true });
-
-      setStats({
-        totalProducts: productsCount || 0,
-        totalCategories: categoriesCount || 0,
-        totalOrders: 0, // To'ldiriladi orders jadvali yaratilganda
-        totalRevenue: 0
-      });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
   };
 
   const handleLogout = async () => {
@@ -96,37 +64,6 @@ export default function AdminDashboard() {
     { icon: Users, label: "Adminlar", href: "/admin/admins" },
     { icon: ShoppingCart, label: "Buyurtmalar", href: "/admin/orders" },
     { icon: Settings, label: "Sozlamalar", href: "/admin/settings" },
-  ];
-
-  const statsCards = [
-    { 
-      icon: Package, 
-      label: "Jami Mahsulotlar", 
-      value: stats.totalProducts, 
-      color: "#3b82f6",
-      bgColor: "#dbeafe"
-    },
-    { 
-      icon: FolderTree, 
-      label: "Kategoriyalar", 
-      value: stats.totalCategories, 
-      color: "#8b5cf6",
-      bgColor: "#ede9fe"
-    },
-    { 
-      icon: ShoppingBag, 
-      label: "Buyurtmalar", 
-      value: stats.totalOrders, 
-      color: "#10b981",
-      bgColor: "#d1fae5"
-    },
-    { 
-      icon: DollarSign, 
-      label: "Jami Tushum", 
-      value: `${(stats.totalRevenue / 1000000).toFixed(1)}M`, 
-      color: "#f59e0b",
-      bgColor: "#fef3c7"
-    },
   ];
 
   return (
@@ -213,55 +150,8 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", 
-          gap: "24px",
-          marginBottom: "32px"
-        }}>
-          {statsCards.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div 
-                key={index}
-                style={{
-                  backgroundColor: "var(--card-bg)",
-                  padding: "24px",
-                  borderRadius: "var(--radius-lg)",
-                  boxShadow: "var(--shadow-sm)",
-                  border: "1px solid var(--border-color)"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                  <div>
-                    <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "8px" }}>
-                      {stat.label}
-                    </p>
-                    <h2 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text-main)" }}>
-                      {stat.value}
-                    </h2>
-                  </div>
-                  <div style={{ 
-                    width: "48px", 
-                    height: "48px", 
-                    borderRadius: "var(--radius-md)", 
-                    backgroundColor: stat.bgColor,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <Icon size={24} color={stat.color} />
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "var(--success)" }}>
-                  <TrendingUp size={16} />
-                  <span>+12% o'tgan oyga nisbatan</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Stats Component */}
+        <AdminStats />
 
         {/* Quick Actions */}
         <div style={{ 

@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -196,16 +197,24 @@ export default function EditProductPage() {
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
-            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Rasm (URL)</h2>
+            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Mahsulot rasmi</h2>
             
-            <div className="form-group">
-              <input type="text" className="form-input" placeholder="Rasm havolasi" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+            <ImageUpload 
+              value={imageUrl}
+              onChange={setImageUrl}
+              folder="products"
+            />
+
+            <div style={{ marginTop: "16px" }}>
+              <label className="form-label">Yoki URL orqali:</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="https://example.com/image.jpg" 
+                value={imageUrl} 
+                onChange={e => setImageUrl(e.target.value)} 
+              />
             </div>
-            {imageUrl && (
-              <div style={{ marginTop: "16px" }}>
-                <img src={imageUrl} alt="Preview" style={{ maxWidth: "200px", borderRadius: "var(--radius-md)" }} />
-              </div>
-            )}
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>

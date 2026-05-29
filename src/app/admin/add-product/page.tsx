@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Upload, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function AddProductPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -138,12 +139,24 @@ export default function AddProductPage() {
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
-            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Rasm (URL)</h2>
+            <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Mahsulot rasmi</h2>
             
-            <div className="form-group">
-              <input type="text" className="form-input" placeholder="Rasm havolasi (masalan: /mri_machine.png yoki https://...)" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+            <ImageUpload 
+              value={imageUrl}
+              onChange={setImageUrl}
+              folder="products"
+            />
+
+            <div style={{ marginTop: "16px" }}>
+              <label className="form-label">Yoki URL orqali:</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="https://example.com/image.jpg" 
+                value={imageUrl} 
+                onChange={e => setImageUrl(e.target.value)} 
+              />
             </div>
-            <div style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "8px" }}>* Hozircha rasmni to'g'ridan-to'g'ri URL manzil orqali kiritish mumkin.</div>
           </div>
 
           <div style={{ backgroundColor: "var(--card-bg)", padding: "24px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
