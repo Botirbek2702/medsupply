@@ -39,11 +39,29 @@ export default function FavoriteButton({ product, isLarge }: { product: any, isL
   }
 
   return (
-    <button 
-      style={{ position: "absolute", top: "12px", right: "12px", backgroundColor: "transparent", color: favorite ? "var(--danger)" : "var(--text-muted)", cursor: "pointer", border: "none" }} 
+    <button
+      style={{
+        position: "absolute",
+        top: "12px",
+        right: "12px",
+        width: "34px",
+        height: "34px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "50%",
+        backgroundColor: "rgba(255,255,255,0.92)",
+        boxShadow: "0 2px 8px rgba(15,23,42,0.12)",
+        color: favorite ? "var(--danger)" : "#64748b",
+        cursor: "pointer",
+        border: "none",
+        zIndex: 2,
+        transition: "transform 0.15s, color 0.2s",
+      }}
+      aria-label="Saralanganlarga qo'shish"
       onClick={handleToggle}
     >
-      <Heart size={20} fill={favorite ? "currentColor" : "none"} />
+      <Heart size={18} fill={favorite ? "currentColor" : "none"} />
     </button>
   );
 }

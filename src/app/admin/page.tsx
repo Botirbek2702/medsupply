@@ -67,10 +67,10 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg-color)" }}>
+    <div className="admin-shell" style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg-color)" }}>
       
       {/* Sidebar */}
-      <div style={{ 
+      <div className="admin-sidebar" style={{ 
         width: "280px", 
         backgroundColor: "var(--card-bg)", 
         borderRight: "1px solid var(--border-color)",
@@ -79,20 +79,21 @@ export default function AdminDashboard() {
         flexDirection: "column"
       }}>
         
-        <div style={{ marginBottom: "32px" }}>
+        <div className="admin-sidebar-head" style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "20px", fontWeight: "bold", color: "var(--primary)", marginBottom: "4px" }}>
             MedSupply Admin
           </h1>
           <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>{userEmail}</p>
         </div>
 
-        <nav style={{ flex: 1 }}>
+        <nav className="admin-nav" style={{ flex: 1 }}>
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
               <Link 
                 key={index}
                 href={item.href}
+                className="admin-nav-link"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -103,7 +104,8 @@ export default function AdminDashboard() {
                   color: item.active ? "var(--primary)" : "var(--text-main)",
                   marginBottom: "8px",
                   textDecoration: "none",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  whiteSpace: "nowrap"
                 }}
               >
                 <Icon size={20} />
@@ -117,6 +119,7 @@ export default function AdminDashboard() {
 
         <button
           onClick={handleLogout}
+          className="admin-logout-btn"
           style={{
             display: "flex",
             alignItems: "center",
@@ -139,7 +142,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, padding: "32px" }}>
+      <div className="admin-main" style={{ flex: 1, padding: "32px", minWidth: 0 }}>
         
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "var(--text-main)", marginBottom: "8px" }}>

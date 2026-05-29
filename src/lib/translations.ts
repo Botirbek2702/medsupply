@@ -4,6 +4,7 @@ export const translations = {
   uz: {
     // Header
     catalog: "Katalog",
+    home: "Bosh sahifa",
     search_placeholder: "Mahsulotlarni izlash...",
     light_mode: "Yorug'",
     dark_mode: "Tungi",
@@ -47,6 +48,7 @@ export const translations = {
   ru: {
     // Header
     catalog: "Каталог",
+    home: "Главная",
     search_placeholder: "Поиск товаров...",
     light_mode: "Светлый",
     dark_mode: "Тёмный",
@@ -90,6 +92,7 @@ export const translations = {
   en: {
     // Header
     catalog: "Catalog",
+    home: "Home",
     search_placeholder: "Search products...",
     light_mode: "Light",
     dark_mode: "Dark",
