@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, Save, X, Mail, Shield, Trash2, UserCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface AdminUser {
   id: string;
@@ -15,6 +16,7 @@ interface AdminUser {
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const toast = useToast();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -66,17 +68,17 @@ export default function AdminUsersPage() {
 
   const handleAddAdmin = async () => {
     if (!newEmail.trim() || !newPassword.trim()) {
-      alert("Email va parolni to'ldiring!");
+      toast.warning("Email va parolni to'ldiring!");
       return;
     }
 
     if (!newEmail.toLowerCase().includes("admin")) {
-      alert("Admin email'da 'admin' so'zi bo'lishi kerak!");
+      toast.warning("Admin email'da 'admin' so'zi bo'lishi kerak!");
       return;
     }
 
     if (newPassword.length < 6) {
-      alert("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+      toast.warning("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
       return;
     }
 
@@ -95,7 +97,7 @@ export default function AdminUsersPage() {
 
       if (error) throw error;
 
-      alert("Yangi admin muvaffaqiyatli qo'shildi! ✅\n\nAdmin email'ga tasdiqlash xati yuborildi.");
+      toast.success("Yangi admin muvaffaqiyatli qo'shildi! Admin email'ga tasdiqlash xati yuborildi.");
       setShowAddModal(false);
       setNewEmail("");
       setNewPassword("");
@@ -105,7 +107,7 @@ export default function AdminUsersPage() {
 
     } catch (error: any) {
       console.error(error);
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setSaving(false);
     }

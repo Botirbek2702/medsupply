@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Star, MessageSquare, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface Review {
   id: number;
@@ -14,6 +15,7 @@ interface Review {
 }
 
 export default function ProductReviews({ productId }: { productId: number }) {
+  const toast = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -48,11 +50,11 @@ export default function ProductReviews({ productId }: { productId: number }) {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("Sharh qoldirish uchun tizimga kiring!");
+      toast.warning("Sharh qoldirish uchun tizimga kiring!");
       return;
     }
     if (rating === 0) {
-      alert("Iltimos, reyting (yulduz) tanlang!");
+      toast.warning("Iltimos, reyting (yulduz) tanlang!");
       return;
     }
 
@@ -74,12 +76,12 @@ export default function ProductReviews({ productId }: { productId: number }) {
 
       if (error) throw error;
 
-      alert("Sharhingiz uchun rahmat! ⭐");
+      toast.success("Sharhingiz uchun rahmat!");
       setRating(0);
       setComment("");
       await fetchReviews();
     } catch (error: any) {
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setSubmitting(false);
     }
@@ -89,7 +91,7 @@ export default function ProductReviews({ productId }: { productId: number }) {
     if (!confirm("Sharhni o'chirishni xohlaysizmi?")) return;
     const { error } = await supabase.from("product_reviews").delete().eq("id", id);
     if (error) {
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } else {
       await fetchReviews();
     }

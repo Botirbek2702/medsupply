@@ -6,12 +6,14 @@ import Link from "next/link";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ImageUpload from "@/components/ImageUpload";
+import { useToast } from "@/context/ToastContext";
 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
 
+  const toast = useToast();
   const [categories, setCategories] = useState<any[]>([]);
   const [specs, setSpecs] = useState([{ name: "", value: "" }]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function EditProductPage() {
       .single();
 
     if (error || !product) {
-      alert("Mahsulot topilmadi!");
+      toast.error("Mahsulot topilmadi!");
       router.push("/admin/products");
       return;
     }
@@ -101,7 +103,7 @@ export default function EditProductPage() {
 
   const handleUpdate = async () => {
     if (!title || !price || !categoryId) {
-      alert("Iltimos, mahsulot nomi, narxi va kategoriyasini kiriting!");
+      toast.warning("Iltimos, mahsulot nomi, narxi va kategoriyasini kiriting!");
       return;
     }
 
@@ -139,12 +141,12 @@ export default function EditProductPage() {
         if (specsError) throw specsError;
       }
 
-      alert("Mahsulot muvaffaqiyatli yangilandi! 🎉");
+      toast.success("Mahsulot muvaffaqiyatli yangilandi!");
       router.push("/admin/products");
 
     } catch (error: any) {
       console.error(error);
-      alert("Xatolik yuz berdi: " + error.message);
+      toast.error("Xatolik yuz berdi: " + error.message);
     } finally {
       setSaving(false);
     }

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface ImageUploadProps {
   value?: string;
@@ -11,6 +12,7 @@ interface ImageUploadProps {
 }
 
 export default function ImageUpload({ value, onChange, folder = "products" }: ImageUploadProps) {
+  const toast = useToast();
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(value || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,13 +23,13 @@ export default function ImageUpload({ value, onChange, folder = "products" }: Im
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Faqat rasm fayllari yuklash mumkin!");
+      toast.warning("Faqat rasm fayllari yuklash mumkin!");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Rasm hajmi 5MB dan kichik bo'lishi kerak!");
+      toast.warning("Rasm hajmi 5MB dan kichik bo'lishi kerak!");
       return;
     }
 
@@ -48,7 +50,7 @@ export default function ImageUpload({ value, onChange, folder = "products" }: Im
 
       if (error) {
         console.error("Upload error:", error);
-        alert("Rasm yuklashda xatolik: " + error.message);
+        toast.error("Rasm yuklashda xatolik: " + error.message);
         return;
       }
 
@@ -61,10 +63,10 @@ export default function ImageUpload({ value, onChange, folder = "products" }: Im
       setPreview(publicUrl);
       onChange(publicUrl);
 
-      alert("Rasm muvaffaqiyatli yuklandi! ✅");
+      toast.success("Rasm muvaffaqiyatli yuklandi!");
     } catch (error: any) {
       console.error("Error:", error);
-      alert("Xatolik yuz berdi: " + error.message);
+      toast.error("Xatolik yuz berdi: " + error.message);
     } finally {
       setUploading(false);
     }

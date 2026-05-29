@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Edit, Trash2, Search, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface Product {
   id: number;
@@ -20,6 +21,7 @@ interface Product {
 
 export default function AdminProductsPage() {
   const router = useRouter();
+  const toast = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +80,9 @@ export default function AdminProductsPage() {
     const { error } = await supabase.from('products').delete().eq('id', id);
     
     if (error) {
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } else {
-      alert("Mahsulot muvaffaqiyatli o'chirildi!");
+      toast.success("Mahsulot muvaffaqiyatli o'chirildi!");
       fetchProducts();
     }
   };

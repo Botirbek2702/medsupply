@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 export default function AuthPage() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   
   // Auth states
@@ -33,7 +35,7 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return alert("Barcha maydonlarni to'ldiring!");
+    if (!email || !password) { toast.warning("Barcha maydonlarni to'ldiring!"); return; }
     
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ 
@@ -44,7 +46,7 @@ export default function AuthPage() {
     setLoading(false);
     
     if (error) {
-      alert("Xatolik: " + (error.message.includes("Invalid login") ? "Email yoki parol noto'g'ri" : error.message));
+      toast.error("Xatolik: " + (error.message.includes("Invalid login") ? "Email yoki parol noto'g'ri" : error.message));
     } else {
       if (email.toLowerCase().includes("admin")) {
         router.push("/admin");
@@ -56,7 +58,7 @@ export default function AuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !clinicName) return alert("Barcha asosiy maydonlarni to'ldiring!");
+    if (!email || !password || !clinicName) { toast.warning("Barcha asosiy maydonlarni to'ldiring!"); return; }
     
     setLoading(true);
     const redirectUrl = email.toLowerCase().includes("admin") 
@@ -78,9 +80,9 @@ export default function AuthPage() {
     setLoading(false);
     
     if (error) {
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } else {
-      alert("Muvaffaqiyatli ro'yxatdan o'tdingiz! Iltimos, tizimga kiring.");
+      toast.success("Muvaffaqiyatli ro'yxatdan o'tdingiz! Iltimos, tizimga kiring.");
       setActiveTab("login");
     }
   };

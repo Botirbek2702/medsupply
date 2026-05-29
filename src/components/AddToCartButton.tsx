@@ -1,9 +1,11 @@
 "use client";
 import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useToast } from "@/context/ToastContext";
 
 export default function AddToCartButton({ product, fullWidth }: { product: any, fullWidth?: boolean }) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const toast = useToast();
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -13,8 +15,7 @@ export default function AddToCartButton({ product, fullWidth }: { product: any, 
       price: Number(product.price),
       image_url: product.image_url || '/placeholder.png'
     });
-    // Kichik notification o'rniga alert vaqtincha ishlatiladi
-    alert("Savatga qo'shildi!");
+    toast.success("Savatga qo'shildi!");
   };
 
   if (fullWidth) {
