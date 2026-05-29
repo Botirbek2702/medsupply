@@ -22,7 +22,7 @@ export default function AuthPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         if (session.user.email?.toLowerCase().includes("admin")) {
-          router.push("/admin/add-product");
+          router.push("/admin");
         } else {
           router.push("/profile");
         }
@@ -47,7 +47,7 @@ export default function AuthPage() {
       alert("Xatolik: " + (error.message.includes("Invalid login") ? "Email yoki parol noto'g'ri" : error.message));
     } else {
       if (email.toLowerCase().includes("admin")) {
-        router.push("/admin/add-product");
+        router.push("/admin");
       } else {
         router.push("/profile");
       }
@@ -60,7 +60,7 @@ export default function AuthPage() {
     
     setLoading(true);
     const redirectUrl = email.toLowerCase().includes("admin") 
-      ? `${window.location.origin}/admin/add-product` 
+      ? `${window.location.origin}/admin` 
       : `${window.location.origin}/profile`;
 
     const { error } = await supabase.auth.signUp({ 
