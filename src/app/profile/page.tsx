@@ -26,6 +26,16 @@ interface OrderItem {
   subtotal: number;
 }
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 export default function ProfilePage() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "orders";
@@ -34,6 +44,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -46,7 +57,10 @@ export default function ProfilePage() {
         router.push("/auth");
       } else {
         setUserData(session.user);
-        await fetchOrders(session.user.id);
+        await Promise.all([
+          fetchOrders(session.user.id),
+          fetchNotifications(session.user.id),
+        ]);
       }
       setLoading(false);
     };
@@ -67,6 +81,38 @@ export default function ProfilePage() {
       console.error('Error fetching orders:', error);
     }
   };
+
+  const fetchNotifications = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markAsRead = async (id: number) => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+  };
+
+  const markAllAsRead = async () => {
+    if (!userData) return;
+    await supabase.from('notifications').update({ is_read: true }).eq('user_id', userData.id).eq('is_read', false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  const deleteNotification = async (id: number) => {
+    await supabase.from('notifications').delete().eq('id', id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const viewOrderDetails = async (order: Order) => {
     setSelectedOrder(order);
@@ -154,7 +200,9 @@ export default function ProfilePage() {
                 style={{ width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: activeTab === "notifications" ? "var(--primary)" : "var(--text-main)", fontWeight: activeTab === "notifications" ? 600 : 400, display: "flex", alignItems: "center", gap: "8px", justifyContent: "space-between", fontSize: "16px" }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><Bell size={18} /> Xabarnomalar</span>
-                <span style={{ backgroundColor: "var(--danger)", color: "white", padding: "2px 8px", borderRadius: "10px", fontSize: "12px" }}>2</span>
+                {unreadCount > 0 && (
+                  <span style={{ backgroundColor: "var(--danger)", color: "white", padding: "2px 8px", borderRadius: "10px", fontSize: "12px" }}>{unreadCount}</span>
+                )}
               </button>
             </li>
             <li>
@@ -299,10 +347,80 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {(activeTab === "notifications" || activeTab === "settings") && (
+          {activeTab === "notifications" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                <h2 style={{ fontSize: "20px", color: "var(--text-main)", margin: 0 }}>
+                  Xabarnomalar {unreadCount > 0 && `(${unreadCount} yangi)`}
+                </h2>
+                {unreadCount > 0 && (
+                  <button onClick={markAllAsRead} className="btn btn-secondary" style={{ fontSize: "13px" }}>
+                    Hammasini o'qilgan deb belgilash
+                  </button>
+                )}
+              </div>
+
+              {notifications.length === 0 ? (
+                <div style={{ backgroundColor: "var(--card-bg)", padding: "64px 32px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", textAlign: "center" }}>
+                  <Bell size={56} color="var(--text-muted)" style={{ opacity: 0.3, margin: "0 auto 16px" }} />
+                  <h3 style={{ fontSize: "18px", color: "var(--text-main)", marginBottom: "8px" }}>Xabarnomalar yo'q</h3>
+                  <p style={{ color: "var(--text-muted)" }}>Buyurtmangiz holati o'zgarganda bu yerda ko'rinadi.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      style={{
+                        backgroundColor: n.is_read ? "var(--card-bg)" : "var(--primary-light)",
+                        padding: "16px 20px",
+                        borderRadius: "var(--radius-lg)",
+                        boxShadow: "var(--shadow-sm)",
+                        border: "1px solid var(--border-color)",
+                        display: "flex",
+                        gap: "14px",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <div style={{ width: "40px", height: "40px", borderRadius: "var(--radius-md)", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Bell size={20} color="var(--primary)" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: 600, color: "var(--text-main)", fontSize: "15px" }}>{n.title}</span>
+                          {!n.is_read && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--primary)", flexShrink: 0, marginTop: "6px" }} />}
+                        </div>
+                        <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: 0, lineHeight: 1.5 }}>{n.message}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "10px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                            {new Date(n.created_at).toLocaleString('uz-UZ')}
+                          </span>
+                          {n.link && (
+                            <Link href={n.link} onClick={() => markAsRead(n.id)} style={{ fontSize: "13px", color: "var(--primary)", fontWeight: 500 }}>
+                              Ko'rish
+                            </Link>
+                          )}
+                          {!n.is_read && (
+                            <button onClick={() => markAsRead(n.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px" }}>
+                              O'qildi
+                            </button>
+                          )}
+                          <button onClick={() => deleteNotification(n.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", fontSize: "13px" }}>
+                            O'chirish
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "settings" && (
             <div style={{ backgroundColor: "var(--card-bg)", padding: "64px 32px", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", textAlign: "center" }}>
               <div style={{ marginBottom: "16px", opacity: 0.2, display: "flex", justifyContent: "center" }}>
-                {activeTab === "notifications" ? <Bell size={64} /> : <Settings size={64} />}
+                <Settings size={64} />
               </div>
               <h2 style={{ fontSize: "24px", marginBottom: "8px", color: "var(--text-main)" }}>Tez orada...</h2>
               <p style={{ color: "var(--text-muted)", maxWidth: "400px", margin: "0 auto" }}>
