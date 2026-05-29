@@ -5,8 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ImageUpload from "@/components/ImageUpload";
+import { useToast } from "@/context/ToastContext";
 
 export default function AddProductPage() {
+  const toast = useToast();
   const [categories, setCategories] = useState<any[]>([]);
   const [specs, setSpecs] = useState([{ name: "", value: "" }]);
   
@@ -45,7 +47,7 @@ export default function AddProductPage() {
 
   const handleSave = async () => {
     if (!title || !price || !categoryId) {
-      alert("Iltimos, mahsulot nomi, narxi va kategoriyasini kiriting!");
+      toast.warning("Iltimos, mahsulot nomi, narxi va kategoriyasini kiriting!");
       return;
     }
 
@@ -82,7 +84,7 @@ export default function AddProductPage() {
         if (specsError) throw specsError;
       }
 
-      alert("Mahsulot muvaffaqiyatli bazaga qo'shildi! 🎉");
+      toast.success("Mahsulot muvaffaqiyatli bazaga qo'shildi!");
       
       // Clear form
       setTitle("");
@@ -94,7 +96,7 @@ export default function AddProductPage() {
 
     } catch (error: any) {
       console.error(error);
-      alert("Xatolik yuz berdi: " + error.message);
+      toast.error("Xatolik yuz berdi: " + error.message);
     } finally {
       setLoading(false);
     }

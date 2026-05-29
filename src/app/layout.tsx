@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,10 +23,12 @@ export default function RootLayout({
     <html lang="uz">
       <body className={inter.className} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <LanguageProvider>
-          <Header />
-          <main style={{ flex: 1 }}>{children}</main>
-          <Footer />
-          <MobileBottomNav />
+          <ToastProvider>
+            <Header />
+            <main style={{ flex: 1 }}>{children}</main>
+            <Footer />
+            <MobileBottomNav />
+          </ToastProvider>
         </LanguageProvider>
       </body>
     </html>

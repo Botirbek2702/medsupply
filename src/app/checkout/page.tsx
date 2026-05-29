@@ -6,10 +6,12 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle, MapPin, CreditCard, Building2, Loader2, ShoppingCart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useCartStore } from "@/store/useCartStore";
+import { useToast } from "@/context/ToastContext";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items: cartItems, getTotalPrice, clearCart } = useCartStore();
+  const toast = useToast();
   
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -35,7 +37,7 @@ export default function CheckoutPage() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      alert("Buyurtma berish uchun tizimga kirishingiz kerak!");
+      toast.warning("Buyurtma berish uchun tizimga kirishingiz kerak!");
       router.push("/auth");
       return;
     }
@@ -93,12 +95,12 @@ export default function CheckoutPage() {
   const handleSubmitOrder = async () => {
     // Validation
     if (!clinicName || !contactPerson || !phone || !fullAddress) {
-      alert("Iltimos, barcha majburiy maydonlarni to'ldiring!");
+      toast.warning("Iltimos, barcha majburiy maydonlarni to'ldiring!");
       return;
     }
 
     if (cartItems.length === 0) {
-      alert("Savatingiz bo'sh!");
+      toast.warning("Savatingiz bo'sh!");
       return;
     }
 
@@ -188,14 +190,14 @@ export default function CheckoutPage() {
         clearCart();
       } else {
         // Bank transfer - no immediate payment
-        alert(`✅ Buyurtma muvaffaqiyatli yaratildi!\n\nBuyurtma raqami: ${orderData.order_number}\n\nTez orada sizga shartnoma va schyot-faktura yuboriladi.`);
+        toast.success(`Buyurtma yaratildi! Raqam: ${orderData.order_number}. Tez orada siz bilan bog'lanamiz.`);
         clearCart();
         router.push('/profile?tab=orders');
       }
 
     } catch (error: any) {
       console.error('Order creation error:', error);
-      alert("Xatolik yuz berdi: " + error.message);
+      toast.error("Xatolik yuz berdi: " + error.message);
     } finally {
       setLoading(false);
     }

@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Globe, Mail, Phone, MapPin, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 export default function AdminSettingsPage() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -40,7 +42,7 @@ export default function AdminSettingsPage() {
     // Simulate saving (in real app, save to database or config)
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    alert("Sozlamalar muvaffaqiyatli saqlandi! ✅");
+    toast.success("Sozlamalar muvaffaqiyatli saqlandi!");
     setSaving(false);
   };
 

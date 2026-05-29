@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Eye, Search, Filter, X, Truck, Ban } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface Order {
   id: number;
@@ -32,6 +33,7 @@ interface OrderItem {
 
 export default function AdminOrdersPage() {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
@@ -134,11 +136,11 @@ export default function AdminOrdersPage() {
         notes: `Status o'zgartirildi: ${newStatus}`
       });
 
-      alert('Buyurtma holati yangilandi! ✅');
+      toast.success('Buyurtma holati yangilandi!');
       setShowOrderModal(false);
       fetchOrders();
     } catch (error: any) {
-      alert('Xatolik: ' + error.message);
+      toast.error('Xatolik: ' + error.message);
     } finally {
       setUpdatingStatus(false);
     }

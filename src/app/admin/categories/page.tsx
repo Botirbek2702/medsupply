@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Edit, Trash2, Plus, Save, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/context/ToastContext";
 
 interface Category {
   id: number;
@@ -14,6 +15,7 @@ interface Category {
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
+  const toast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -70,7 +72,7 @@ export default function AdminCategoriesPage() {
 
   const handleSave = async () => {
     if (!categoryName.trim()) {
-      alert("Kategoriya nomini kiriting!");
+      toast.warning("Kategoriya nomini kiriting!");
       return;
     }
 
@@ -87,7 +89,7 @@ export default function AdminCategoriesPage() {
           .eq('id', editingCategory.id);
 
         if (error) throw error;
-        alert("Kategoriya muvaffaqiyatli yangilandi!");
+        toast.success("Kategoriya muvaffaqiyatli yangilandi!");
       } else {
         // Insert
         const { error } = await supabase
@@ -98,14 +100,14 @@ export default function AdminCategoriesPage() {
           });
 
         if (error) throw error;
-        alert("Kategoriya muvaffaqiyatli qo'shildi!");
+        toast.success("Kategoriya muvaffaqiyatli qo'shildi!");
       }
 
       setShowAddModal(false);
       fetchCategories();
     } catch (error: any) {
       console.error(error);
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setSaving(false);
     }
@@ -117,9 +119,9 @@ export default function AdminCategoriesPage() {
     const { error } = await supabase.from('categories').delete().eq('id', id);
     
     if (error) {
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } else {
-      alert("Kategoriya muvaffaqiyatli o'chirildi!");
+      toast.success("Kategoriya muvaffaqiyatli o'chirildi!");
       fetchCategories();
     }
   };
