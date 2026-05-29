@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, ShoppingCart, Heart, User, Menu, X, ChevronRight, Sun, Moon } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { supabase } from "@/lib/supabase";
@@ -17,12 +18,21 @@ const categories = [
 ];
 
 export default function Header() {
+  const router = useRouter();
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [profileUrl, setProfileUrl] = useState("/auth");
+  const [searchTerm, setSearchTerm] = useState("");
   const totalItems = useCartStore(state => state.getTotalItems());
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -36,7 +46,7 @@ export default function Header() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin/add-product" : "/profile");
+        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin" : "/profile");
       }
     };
     checkUser();
@@ -44,7 +54,7 @@ export default function Header() {
     // Listen to changes (login/logout)
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin/add-product" : "/profile");
+        setProfileUrl(session.user.email?.toLowerCase().includes("admin") ? "/admin" : "/profile");
       } else {
         setProfileUrl("/auth");
       }
@@ -85,18 +95,18 @@ export default function Header() {
             <span>Katalog</span>
           </button>
 
-          <div className="search-bar">
+          <form className="search-bar" onSubmit={handleSearch}>
             <input 
               type="text" 
               className="search-input" 
               placeholder="Mahsulotlarni izlash..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Link href="/search">
-              <button className="search-btn">
-                <Search size={20} />
-              </button>
-            </Link>
-          </div>
+            <button type="submit" className="search-btn">
+              <Search size={20} />
+            </button>
+          </form>
 
           <div className="header-actions">
             <button onClick={toggleDarkMode} className="action-item" style={{ backgroundColor: 'transparent', border: 'none' }}>
