@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="uz">
       <body className={inter.className} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-        <Header />
-        <main style={{ flex: 1 }}>{children}</main>
-        <Footer />
+        <LanguageProvider>
+          <Header />
+          <main style={{ flex: 1 }}>{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );
