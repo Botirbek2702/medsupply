@@ -178,15 +178,15 @@ export default function Header() {
               {isDark ? <Sun size={24} /> : <Moon size={24} />}
               <span>{isDark ? t("light_mode") : t("dark_mode")}</span>
             </button>
-            <Link href={profileUrl} className="action-item">
+            <Link href={profileUrl} className="action-item header-hide-mobile">
               <User size={24} />
               <span>{t("account")}</span>
             </Link>
-            <Link href="/favorites" className="action-item">
+            <Link href="/favorites" className="action-item header-hide-mobile">
               <Heart size={24} />
               <span>{t("favorites")}</span>
             </Link>
-            <Link href="/cart" className="action-item" style={{ position: 'relative' }}>
+            <Link href="/cart" className="action-item header-hide-mobile" style={{ position: 'relative' }}>
               <ShoppingCart size={24} />
               <span>{t("cart")}</span>
               {mounted && totalItems > 0 && (

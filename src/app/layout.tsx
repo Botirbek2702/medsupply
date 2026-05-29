@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           <Header />
           <main style={{ flex: 1 }}>{children}</main>
           <Footer />
+          <MobileBottomNav />
         </LanguageProvider>
       </body>
     </html>

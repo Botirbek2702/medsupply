@@ -14,23 +14,35 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   const { data: specs } = await supabase.from('product_specs').select('*').eq('product_id', resolvedParams.id);
 
   if (!product) return <div className="container" style={{ padding: "32px 16px" }}>Mahsulot topilmadi... (ID: {resolvedParams.id})</div>;
+
+  const hasDiscount = product.old_price && Number(product.old_price) > Number(product.price);
+  const discountPercent = hasDiscount
+    ? Math.round((1 - Number(product.price) / Number(product.old_price)) * 100)
+    : 0;
+
   return (
     <div className="container" style={{ padding: "24px 16px" }}>
       {/* Breadcrumbs */}
-      <div className="breadcrumbs" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
+      <div className="breadcrumbs" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", flexWrap: "wrap" }}>
         <Link href="/">Bosh sahifa</Link>
         <ChevronRight size={16} />
-        <Link href="#">Katta uskunalar</Link>
+        <Link href="/search">Katalog</Link>
         <ChevronRight size={16} />
-        <Link href="#">MRT apparatlari</Link>
-        <ChevronRight size={16} />
-        <span style={{ color: "var(--text-main)" }}>Philips Achieva 1.5T</span>
+        <span style={{ color: "var(--text-main)" }}>{product.title}</span>
       </div>
 
       <div className="product-detail-layout">
         {/* Left Side: Images */}
         <div className="product-gallery">
           <div className="main-image-container">
+            {hasDiscount && (
+              <span
+                className="badge"
+                style={{ position: "absolute", top: "16px", left: "16px", background: "var(--danger)", color: "#fff", zIndex: 2, fontSize: "14px", padding: "6px 12px" }}
+              >
+                -{discountPercent}% chegirma
+              </span>
+            )}
             <Image 
               src={product.image_url || '/placeholder.png'} 
               alt={product.title} 
