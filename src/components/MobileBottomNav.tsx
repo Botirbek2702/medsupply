@@ -41,7 +41,13 @@ export default function MobileBottomNav() {
   // (centered forms there could otherwise be overlapped by the fixed nav)
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/auth")) return null;
 
-  const items = [
+  const items: {
+    href: string;
+    icon: any;
+    label: string;
+    match: (p: string) => boolean;
+    badge?: number;
+  }[] = [
     { href: "/", icon: Home, label: t("home"), match: (p: string) => p === "/" },
     { href: "/search", icon: Search, label: t("catalog"), match: (p: string) => p.startsWith("/search") },
     { href: "/cart", icon: ShoppingCart, label: t("cart"), match: (p: string) => p.startsWith("/cart"), badge: mounted ? totalItems : 0 },

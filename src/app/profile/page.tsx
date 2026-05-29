@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Package, CheckCircle, Truck, User, Bell, Settings, LogOut, Clock, Ban, Eye, X, FileText } from "lucide-react";
@@ -36,7 +36,7 @@ interface Notification {
   created_at: string;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "orders";
   
@@ -601,5 +601,14 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ padding: "64px 16px", textAlign: "center" }}>Yuklanmoqda...</div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
