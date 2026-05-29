@@ -255,3 +255,60 @@ DROP TABLE IF EXISTS orders CASCADE;
 DROP FUNCTION IF EXISTS generate_order_number CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
 */
+
+
+
+-- ============================================
+-- PAYMENT TRANSACTIONS TABLE
+-- To'lov tranzaksiyalari (Click, Payme, Uzum)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS payment_transactions (
+    id BIGSERIAL PRIMARY KEY,
+    transaction_id VARCHAR(255) UNIQUE NOT NULL,
+    order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
+    
+    -- Provider info
+    provider VARCHAR(50) NOT NULL, -- 'click', 'payme', 'uzum'
+    
+    -- Transaction details
+    amount BIGINT NOT NULL, -- Amount in tiyin (so'm * 100)
+    state INTEGER DEFAULT 1, -- 1=created, 2=performed, -1=cancelled, -2=cancelled_after_perform
+    
+    -- Timestamps (in milliseconds for Payme compatibility)
+    create_time BIGINT NOT NULL,
+    perform_time BIGINT,
+    cancel_time BIGINT,
+    
+    -- Additional info
+    reason INTEGER, -- Cancel reason code
+    metadata JSONB, -- Additional provider-specific data
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for payment_transactions
+CREATE INDEX idx_payment_transactions_transaction_id ON payment_transactions(transaction_id);
+CREATE INDEX idx_payment_transactions_order_id ON payment_transactions(order_id);
+CREATE INDEX idx_payment_transactions_provider ON payment_transactions(provider);
+CREATE INDEX idx_payment_transactions_state ON payment_transactions(state);
+
+-- RLS for payment_transactions
+ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can view all transactions"
+ON payment_transactions FOR SELECT
+USING (
+    auth.jwt() ->> 'email' LIKE '%admin%'
+);
+
+CREATE POLICY "Users can view own transactions"
+ON payment_transactions FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM orders 
+        WHERE orders.id = payment_transactions.order_id 
+        AND orders.user_id = auth.uid()
+    )
+);

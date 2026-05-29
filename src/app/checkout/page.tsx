@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const [fullAddress, setFullAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
   const [customerNotes, setCustomerNotes] = useState("");
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -46,6 +47,47 @@ export default function CheckoutPage() {
     if (session.user.user_metadata?.clinic_name) {
       setClinicName(session.user.user_metadata.clinic_name);
     }
+  };
+
+  const handlePayWithClick = async (orderId: number) => {
+    const CLICK_SERVICE_ID = process.env.NEXT_PUBLIC_CLICK_SERVICE_ID || "demo";
+    const CLICK_MERCHANT_ID = process.env.NEXT_PUBLIC_CLICK_MERCHANT_ID || "demo";
+    
+    const { data: order } = await supabase
+      .from('orders')
+      .select('final_amount')
+      .eq('id', orderId)
+      .single();
+
+    if (!order) return;
+
+    const amount = order.final_amount;
+    const returnUrl = `${window.location.origin}/profile?tab=orders`;
+    
+    // Redirect to Click payment page
+    const clickUrl = `https://my.click.uz/services/pay?service_id=${CLICK_SERVICE_ID}&merchant_id=${CLICK_MERCHANT_ID}&amount=${amount}&transaction_param=${orderId}&return_url=${returnUrl}`;
+    
+    window.location.href = clickUrl;
+  };
+
+  const handlePayWithPayme = async (orderId: number) => {
+    const PAYME_MERCHANT_ID = process.env.NEXT_PUBLIC_PAYME_MERCHANT_ID || "demo";
+    
+    const { data: order } = await supabase
+      .from('orders')
+      .select('final_amount')
+      .eq('id', orderId)
+      .single();
+
+    if (!order) return;
+
+    const amount = Math.round(order.final_amount * 100); // Convert to tiyin
+    const returnUrl = `${window.location.origin}/profile?tab=orders`;
+    
+    // Redirect to Payme payment page
+    const paymeUrl = `https://checkout.paycom.uz/${Buffer.from(`m=${PAYME_MERCHANT_ID};ac.order_id=${orderId};a=${amount};c=${returnUrl}`).toString('base64')}`;
+    
+    window.location.href = paymeUrl;
   };
 
   const handleSubmitOrder = async () => {
@@ -135,14 +177,21 @@ export default function CheckoutPage() {
           changed_by: user.id
         });
 
-      // Success!
-      alert(`✅ Buyurtma muvaffaqiyatli yaratildi!\n\nBuyurtma raqami: ${orderData.order_number}\n\nTez orada sizga aloqaga chiqamiz.`);
-      
-      // Clear cart
-      clearCart();
-      
-      // Redirect to profile/orders
-      router.push('/profile?tab=orders');
+      // Success! Handle payment
+      if (paymentMethod === 'click') {
+        // Redirect to Click payment
+        await handlePayWithClick(orderData.id);
+        clearCart();
+      } else if (paymentMethod === 'payme') {
+        // Redirect to Payme payment
+        await handlePayWithPayme(orderData.id);
+        clearCart();
+      } else {
+        // Bank transfer - no immediate payment
+        alert(`✅ Buyurtma muvaffaqiyatli yaratildi!\n\nBuyurtma raqami: ${orderData.order_number}\n\nTez orada sizga shartnoma va schyot-faktura yuboriladi.`);
+        clearCart();
+        router.push('/profile?tab=orders');
+      }
 
     } catch (error: any) {
       console.error('Order creation error:', error);
@@ -331,18 +380,39 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid ${paymentMethod === 'card' ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: paymentMethod === 'card' ? 'var(--primary-light)' : 'transparent' }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid ${paymentMethod === 'click' ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: paymentMethod === 'click' ? 'var(--primary-light)' : 'transparent' }}>
                 <input 
                   type="radio" 
                   name="payment"
-                  value="card"
-                  checked={paymentMethod === 'card'}
+                  value="click"
+                  checked={paymentMethod === 'click'}
                   onChange={e => setPaymentMethod(e.target.value)}
                   style={{ width: "20px", height: "20px", accentColor: "var(--primary)", marginTop: "2px" }} 
                 />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>Korporativ karta orqali</div>
-                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.4 }}>Uzcard yoki Humo korporativ kartalari orqali onlayn to'lov qilish imkoniyati. (Tez orada)</div>
+                  <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                    Click to'lov tizimi
+                    <span style={{ fontSize: "20px" }}>💳</span>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.4 }}>Uzcard, Humo yoki xalqaro kartalari orqali onlayn to'lov</div>
+                </div>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid ${paymentMethod === 'payme' ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: paymentMethod === 'payme' ? 'var(--primary-light)' : 'transparent' }}>
+                <input 
+                  type="radio" 
+                  name="payment"
+                  value="payme"
+                  checked={paymentMethod === 'payme'}
+                  onChange={e => setPaymentMethod(e.target.value)}
+                  style={{ width: "20px", height: "20px", accentColor: "var(--primary)", marginTop: "2px" }} 
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                    Payme
+                    <span style={{ fontSize: "20px" }}>💰</span>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.4 }}>Payme ilovasi yoki kartalari orqali tez va xavfsiz to'lov</div>
                 </div>
               </label>
             </div>
