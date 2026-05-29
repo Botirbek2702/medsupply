@@ -167,26 +167,27 @@ DROP POLICY IF EXISTS "Admins can manage order history" ON public.order_status_h
 DROP POLICY IF EXISTS "Admins can view all transactions" ON public.payment_transactions;
 DROP POLICY IF EXISTS "Users can view own transactions" ON public.payment_transactions;
 
+-- ============================================
+-- MUHIM: Policy'lar auth.jwt() dan email oladi.
+-- auth.users jadvaliga to'g'ridan-to'g'ri murojaat QILMAYMIZ,
+-- chunki bu "permission denied for table users" xatoligini beradi.
+-- ============================================
+
 -- Orders policies
 CREATE POLICY "Users can view own orders"
 ON public.orders FOR SELECT
-USING (auth.uid() = user_id);
+USING (
+    auth.uid() = user_id 
+    OR (auth.jwt() ->> 'email') LIKE '%admin%'
+);
 
 CREATE POLICY "Users can create own orders"
 ON public.orders FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Admins can view all orders"
-ON public.orders FOR SELECT
-USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid()) LIKE '%admin%'
-);
-
 CREATE POLICY "Admins can update all orders"
 ON public.orders FOR UPDATE
-USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid()) LIKE '%admin%'
-);
+USING ((auth.jwt() ->> 'email') LIKE '%admin%');
 
 -- Order items policies
 CREATE POLICY "Users can view own order items"
@@ -195,7 +196,7 @@ USING (
     EXISTS (
         SELECT 1 FROM public.orders 
         WHERE orders.id = order_items.order_id 
-        AND orders.user_id = auth.uid()
+        AND (orders.user_id = auth.uid() OR (auth.jwt() ->> 'email') LIKE '%admin%')
     )
 );
 
@@ -209,12 +210,6 @@ WITH CHECK (
     )
 );
 
-CREATE POLICY "Admins can view all order items"
-ON public.order_items FOR SELECT
-USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid()) LIKE '%admin%'
-);
-
 -- Order status history policies
 CREATE POLICY "Users can view own order history"
 ON public.order_status_history FOR SELECT
@@ -222,27 +217,27 @@ USING (
     EXISTS (
         SELECT 1 FROM public.orders 
         WHERE orders.id = order_status_history.order_id 
-        AND orders.user_id = auth.uid()
+        AND (orders.user_id = auth.uid() OR (auth.jwt() ->> 'email') LIKE '%admin%')
     )
 );
 
-CREATE POLICY "Admins can manage order history"
-ON public.order_status_history FOR ALL
-USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid()) LIKE '%admin%'
+CREATE POLICY "Users can create order history"
+ON public.order_status_history FOR INSERT
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.orders 
+        WHERE orders.id = order_status_history.order_id 
+        AND orders.user_id = auth.uid()
+    )
+    OR (auth.jwt() ->> 'email') LIKE '%admin%'
 );
 
 -- Payment transactions policies
-CREATE POLICY "Admins can view all transactions"
-ON public.payment_transactions FOR SELECT
-USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid()) LIKE '%admin%'
-);
-
 CREATE POLICY "Users can view own transactions"
 ON public.payment_transactions FOR SELECT
 USING (
-    EXISTS (
+    (auth.jwt() ->> 'email') LIKE '%admin%'
+    OR EXISTS (
         SELECT 1 FROM public.orders 
         WHERE orders.id = payment_transactions.order_id 
         AND orders.user_id = auth.uid()
