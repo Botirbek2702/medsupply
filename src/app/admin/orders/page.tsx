@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Eye, Search, Filter, X, Truck, Ban } from "lucide-react";
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Eye, Search, Filter, X, Truck, Ban, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/context/ToastContext";
 
@@ -786,7 +786,7 @@ export default function AdminOrdersPage() {
                 <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-main)" }}>
                   Buyurtma holatini o'zgartirish
                 </h3>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
                   {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
                     <button
                       key={status}
@@ -812,6 +812,16 @@ export default function AdminOrdersPage() {
                     </button>
                   ))}
                 </div>
+
+                <Link
+                  href={`/invoice/${selectedOrder.id}`}
+                  target="_blank"
+                  className="btn btn-secondary"
+                  style={{ gap: "8px" }}
+                >
+                  <FileText size={18} />
+                  Hisob-fakturani ochish (PDF)
+                </Link>
               </div>
 
             </div>

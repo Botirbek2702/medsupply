@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Package, CheckCircle, Truck, User, Bell, Settings, LogOut, Clock, Ban, Eye, X } from "lucide-react";
+import Link from "next/link";
+import { Package, CheckCircle, Truck, User, Bell, Settings, LogOut, Clock, Ban, Eye, X, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Order {
@@ -447,6 +448,17 @@ export default function ProfilePage() {
                   </span>
                 </div>
               </div>
+
+              {/* Invoice link */}
+              <Link
+                href={`/invoice/${selectedOrder.id}`}
+                target="_blank"
+                className="btn btn-secondary"
+                style={{ gap: "8px", marginBottom: "24px" }}
+              >
+                <FileText size={18} />
+                Hisob-fakturani yuklab olish (PDF)
+              </Link>
 
               {/* Customer Notes */}
               {selectedOrder.customer_notes && (
