@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, ShieldCheck, Truck, Clock, ChevronRight } from "lu
 import { supabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
+import ProductReviews from "@/components/ProductReviews";
 
 export const revalidate = 0;
 
@@ -108,6 +109,9 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
 
         </div>
       </div>
+
+      {/* Product Reviews */}
+      <ProductReviews productId={product.id} />
     </div>
   );
 }
