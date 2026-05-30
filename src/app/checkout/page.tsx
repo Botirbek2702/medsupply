@@ -85,10 +85,11 @@ export default function CheckoutPage() {
 
     const amount = Math.round(order.final_amount * 100); // Convert to tiyin
     const returnUrl = `${window.location.origin}/profile?tab=orders`;
-    
-    // Redirect to Payme payment page
-    const paymeUrl = `https://checkout.paycom.uz/${Buffer.from(`m=${PAYME_MERCHANT_ID};ac.order_id=${orderId};a=${amount};c=${returnUrl}`).toString('base64')}`;
-    
+
+    // Redirect to Payme payment page.
+    // btoa() = brauzerdagi base64 (Node.js'ning Buffer'i brauzerda yo'q!)
+    const paymeUrl = `https://checkout.paycom.uz/${btoa(`m=${PAYME_MERCHANT_ID};ac.order_id=${orderId};a=${amount};c=${returnUrl}`)}`;
+
     window.location.href = paymeUrl;
   };
 
@@ -382,11 +383,12 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid ${paymentMethod === 'click' ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: paymentMethod === 'click' ? 'var(--primary-light)' : 'transparent' }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid var(--border-color)`, borderRadius: "var(--radius-md)", cursor: "not-allowed", opacity: 0.55 }}>
                 <input 
                   type="radio" 
                   name="payment"
                   value="click"
+                  disabled
                   checked={paymentMethod === 'click'}
                   onChange={e => setPaymentMethod(e.target.value)}
                   style={{ width: "20px", height: "20px", accentColor: "var(--primary)", marginTop: "2px" }} 
@@ -394,17 +396,18 @@ export default function CheckoutPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
                     Click to'lov tizimi
-                    <span style={{ fontSize: "20px" }}>💳</span>
+                    <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "var(--warning-light)", color: "var(--warning)" }}>Tez orada</span>
                   </div>
                   <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.4 }}>Uzcard, Humo yoki xalqaro kartalari orqali onlayn to'lov</div>
                 </div>
               </label>
 
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid ${paymentMethod === 'payme' ? 'var(--primary)' : 'var(--border-color)'}`, borderRadius: "var(--radius-md)", cursor: "pointer", backgroundColor: paymentMethod === 'payme' ? 'var(--primary-light)' : 'transparent' }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: `2px solid var(--border-color)`, borderRadius: "var(--radius-md)", cursor: "not-allowed", opacity: 0.55 }}>
                 <input 
                   type="radio" 
                   name="payment"
                   value="payme"
+                  disabled
                   checked={paymentMethod === 'payme'}
                   onChange={e => setPaymentMethod(e.target.value)}
                   style={{ width: "20px", height: "20px", accentColor: "var(--primary)", marginTop: "2px" }} 
@@ -412,7 +415,7 @@ export default function CheckoutPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
                     Payme
-                    <span style={{ fontSize: "20px" }}>💰</span>
+                    <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: "var(--warning-light)", color: "var(--warning)" }}>Tez orada</span>
                   </div>
                   <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.4 }}>Payme ilovasi yoki kartalari orqali tez va xavfsiz to'lov</div>
                 </div>

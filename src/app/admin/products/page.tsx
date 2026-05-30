@@ -57,19 +57,25 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        categories (name)
-      `)
-      .order('id', { ascending: false });
+    // FK bog'liqlikka tayanmaymiz: mahsulot va kategoriyalarni alohida olib,
+    // kategoriya nomini kod tomonida mos keltiramiz (har qanday sxemada ishlaydi).
+    const [productsRes, categoriesRes] = await Promise.all([
+      supabase.from('products').select('*').order('id', { ascending: false }),
+      supabase.from('categories').select('id, name'),
+    ]);
 
-    if (error) {
-      console.error("Error fetching products:", error);
+    if (productsRes.error) {
+      console.error("Error fetching products:", productsRes.error);
+      toast.error("Mahsulotlarni yuklashda xatolik: " + productsRes.error.message);
     } else {
-      setProducts(data || []);
-      setFilteredProducts(data || []);
+      const catMap: Record<number, string> = {};
+      (categoriesRes.data || []).forEach((c: any) => { catMap[c.id] = c.name; });
+      const enriched = (productsRes.data || []).map((p: any) => ({
+        ...p,
+        categories: p.category_id ? { name: catMap[p.category_id] || "—" } : null,
+      }));
+      setProducts(enriched);
+      setFilteredProducts(enriched);
     }
     setLoading(false);
   };

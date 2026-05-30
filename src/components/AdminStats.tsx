@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, DollarSign, Package, ShoppingCart, Users } from "lucide-react";
+import { DollarSign, Package, ShoppingCart, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface StatsData {
@@ -85,11 +85,10 @@ export default function AdminStats() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // Get top products (most ordered)
+      // Get top products (most ordered) — barcha order_items'ni olib, keyin guruhlaymiz
       const { data: topProducts } = await supabase
         .from('order_items')
-        .select('product_id, product_title, quantity')
-        .limit(5);
+        .select('product_id, product_title, quantity');
 
       // Aggregate top products
       const productMap: any = {};
@@ -177,7 +176,6 @@ export default function AdminStats() {
       }}>
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
-          const isPositive = stat.change >= 0;
 
           return (
             <div 
@@ -190,7 +188,7 @@ export default function AdminStats() {
                 border: "1px solid var(--border-color)"
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "8px" }}>
                     {stat.label}
@@ -210,16 +208,6 @@ export default function AdminStats() {
                 }}>
                   <Icon size={24} color={stat.color} />
                 </div>
-              </div>
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "4px", 
-                fontSize: "12px", 
-                color: isPositive ? "var(--success)" : "var(--danger)"
-              }}>
-                {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                <span>{Math.abs(stat.change)}% o'tgan oyga nisbatan</span>
               </div>
             </div>
           );
